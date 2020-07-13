@@ -2,13 +2,13 @@
 Functions for extracting data from Zotero items.
 """
 
-from abc import ABC, abstractmethod
 import re
+from abc import ABC, abstractmethod
+from collections import Iterable
 
-from flask import current_app, Markup
+from flask import Markup, current_app
 
 from .text import id_normalize, sort_normalize
-
 
 RECORD_SEPARATOR = '\x1e'
 
@@ -142,6 +142,26 @@ class TransformerExtractor(Extractor):
         return value
 
 
+class MultiExtractor(Extractor):
+    """
+    Allow a composition of multiple extractors.
+    """
+
+    def __init__(self, *, extractors, encode=encode_multiple, **kwargs):
+        super().__init__(encode=encode, **kwargs)
+        self.extractors = extractors
+
+    def extract(self, item_context, library_context, spec):
+        values = []
+        for extractor in self.extractors:
+            value = extractor.extract(item_context, library_context, spec)
+            if isinstance(value, Iterable) and not isinstance(value, str):
+                values.extend(value)
+            elif value:
+                values.append(value)
+        return values or None
+
+
 class KeyExtractor(Extractor):  # pylint: disable=abstract-method
 
     def __init__(self, *, key, **kwargs):
@@ -172,6 +192,16 @@ class RawDataExtractor(Extractor):
 
     def extract(self, item_context, library_context, spec):
         return item_context.data
+
+
+class ItemRelationsExtractor(Extractor):
+
+    def __init__(self, predicate='dc:replaces', **kwargs):
+        super().__init__(**kwargs)
+        self.predicate = predicate
+
+    def extract(self, item_context, library_context, spec):
+        return item_context.data.get('relations', {}).get(self.predicate)
 
 
 class ItemTypeLabelExtractor(Extractor):
