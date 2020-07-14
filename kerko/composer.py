@@ -258,7 +258,7 @@ class Composer:
                             extractors.TransformerExtractor(
                                 extractor=extractors.ItemDataExtractor(key='extra'),
                                 transformers=[
-                                    transformers.make_regex_find_transformer(
+                                    transformers.find(
                                         regex=r'^\s*(DOI|ISBN|ISSN):\s*(\S+)\s*$',
                                         flags=re.IGNORECASE | re.MULTILINE,
                                         group=2,
@@ -270,7 +270,7 @@ class Composer:
                             extractors.TransformerExtractor(
                                 extractor=extractors.ItemRelationsExtractor(),
                                 transformers=[
-                                    transformers.make_regex_find_transformer(
+                                    transformers.find(
                                         regex=r'^[a-z]+://[^/]+/groups/[0-9]+/items/([A-Z0-9]+)$',
                                         flags=re.MULTILINE,
                                         max_matches=0,
