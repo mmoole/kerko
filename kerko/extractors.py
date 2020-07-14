@@ -131,7 +131,7 @@ class TransformerExtractor(Extractor):
             transform the extracted data. Each callable takes a value as
             argument and returns the transformed value.
         """
-        super().__init__(**kwargs)
+        super().__init__(format_=extractor.format, **kwargs)
         self.extractor = extractor
         self.transformers = transformers
 
@@ -154,6 +154,7 @@ class MultiExtractor(Extractor):
     def extract(self, item_context, library_context, spec):
         values = []
         for extractor in self.extractors:
+            assert self.format == extractor.format  # Extractors can only use same format as parent.
             value = extractor.extract(item_context, library_context, spec)
             if isinstance(value, Iterable) and not isinstance(value, str):
                 values.extend(value)
